@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>球员分析工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            padding: 20px;
+        }
+
+      .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+
+      .input-section label {
+            display: inline-block;
+            width: 150px;
+            font-weight: bold;
+        }
+
+      .input-section input {
+            width: 100px;
+            padding: 5px;
+            margin: 5px;
+            border: 1px solid #4CAF50;
+        }
+
+        span {
+            font-size: 12px;
+            color: #888;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2E8B57;
+        }
+
+        #results {
+            margin-top: 20px;
+            background-color: #e0f0f0;
+            padding: 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        #result-text {
+            width: 450px;
+        }
+
+        canvas {
+            max-width: 450px;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>球员分析工具</h1>
+        <div class="input-section">
+            <label for="height">身高：</label><input type="number" id="height"><span>（中间值：198，范围： 183 - 220 之间）</span><br>
+            <label for="shootingAbility">投篮能力：</label><input type="number" id="shootingAbility"><span>（中间值：0.3，范围：三分球命中率，在 0.25 - 0.45 之间）</span><br>
+            <label for="shootingStability">投篮稳定性：</label><input type="number" id="shootingStability"><span>（中间值：5，范围：1 - 10）</span><br>
+            <label for="speed">速度：</label><input type="number" id="speed"><span>（中间值：3.6 冲刺跑完 3/4 个篮球场的时间在 3.2-4.0）</span><br>
+            <label for="agility">敏捷性：</label><input type="number" id="agility"><span>（中间值：0.525，范围：在 0.15 - 0.9 之间）</span><br>
+            <label for="dribblingAbility">运球能力：</label><input type="number" id="dribblingAbility"><span>（中间值：5，范围:1 - 10）</span><br>
+            <label for="verticalJump">弹跳力：</label><input type="number" id="verticalJump"><span>（中间值：80，范围：垂直弹跳高度在 60 - 100 之间）</span><br>
+            <label for="wingspan">臂展：</label><input type="number" id="wingspan"><span>（中间值：205，范围： 180 - 210）</span><br>
+            <label for="endurance">耐力：</label><input type="number" id="endurance"><span>（中间值：5，范围:1 - 10）</span><br>
+            <button id="calculate">计算</button>
+        </div>
+        <div id="results">
+            <div id="result-text"></div>
+            <canvas></canvas>
+        </div>
+    </div>
+    <script>
+        document.getElementById('calculate').addEventListener('click', function () {
+            const height = parseFloat(document.getElementById('height').value);
+            const shootingAbility = parseFloat(document.getElementById('shootingAbility').value);
+            const shootingStability = parseFloat(document.getElementById('shootingStability').value);
+            const speed = parseFloat(document.getElementById('speed').value);
+            const agility = parseFloat(document.getElementById('agility').value);
+            const dribblingAbility = parseFloat(document.getElementById('dribblingAbility').value);
+            const verticalJump = parseFloat(document.getElementById('verticalJump').value);
+            const wingspan = parseFloat(document.getElementById('wingspan').value);
+            const endurance = parseFloat(document.getElementById('endurance').value);
+
+            const playerData = [height, shootingAbility, shootingStability, speed, agility, dribblingAbility, verticalJump, wingspan, endurance];
+
+            // 中间值
+            const midValues = [198, 0.3, 5, 3.6, 0.375, 5, 80, 205, 5];
+
+            // 标准化函数
+            function standardize(data, midValue) {
+                return (data - midValue) / midValue;
+            }
+
+            // 标准化后的球员数据
+            const standardizedPlayerData = playerData.map((d, i) => standardize(d, midValues[i]));
+
+            // 计算综合得分，假设各项权重相同
+            const weights = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+            const score = standardizedPlayerData.reduce((acc, curr, index) => acc + curr * weights[index], 0) / weights.reduce((acc, curr) => acc + curr, 0);
+
+            // 计算投篮能力综合得分，假设各项权重相同（身高、投篮能力和投篮稳定性）
+            const shootingData = [height, shootingAbility, shootingStability];
+            const shootingMidValues = [198, 0.3, 5];
+            const standardizedShootingData = shootingData.map((d, i) => standardize(d, shootingMidValues[i]));
+            const weightsShooting = [1, 1, 1];
+            const scoreShooting = standardizedShootingData.reduce((acc, curr, index) => acc + curr * weightsShooting[index], 0) / weightsShooting.reduce((acc, curr) => acc + curr, 0);
+
+            // 计算突破能力综合得分，假设各项权重相同（速度、敏捷性、弹跳和运球）
+            const breakingData = [speed, agility, dribblingAbility, verticalJump];
+            const breakingMidValues = [3.6, 0.375, 5, 80];
+            const standardizedBreakingData = breakingData.map((d, i) => standardize(d, breakingMidValues[i]));
+            const weightsBreaking = [1, 1, 1, 1];
+            const scoreBreaking = standardizedBreakingData.reduce((acc, curr, index) => acc + curr * weightsBreaking[index], 0) / weightsBreaking.reduce((acc, curr) => acc + curr, 0);
+
+            // 蒙特卡洛模拟
+            const n = 10000;
+            let P = 0;
+            let U = 0;
+            for (let i = 1; i <= n; i++) {
+                // 生成随机篮球运动员指标
+                const height_range = [183, 220];
+                const shooting_ability_range = [0.25, 0.45];
+                const shooting_stability = Math.floor(Math.random() * 10) + 1;
+                const speed_range = [3.2, 4.0];
+                const agility_range = [0.15, 0.9];
+                const dribbling_ability = Math.floor(Math.random() * 10) + 1;
+                const vertical_jump_range = [60, 100];
+                const wingspan_range = [180, 210];
+                const endurance = Math.floor(Math.random() * 10) + 1;
+
+                const height = height_range[0] + Math.random() * (height_range[1] - height_range[0]);
+                const shooting_ability = shooting_ability_range[0] + Math.random() * (shooting_ability_range[1] - shooting_ability_range[0]);
+                const speed = speed_range[0] + Math.random() * (speed_range[1] - speed_range[0]);
+                const agility = agility_range[0] + Math.random() * (agility_range[1] - agility_range[0]);
+                const vertical_jump = vertical_jump_range[0] + Math.random() * (vertical_jump_range[1] - vertical_jump_range[0]);
+                const wingspan = height + wingspan_range[0] + Math.random() * (wingspan_range[1] - wingspan_range[0]);
+
+                // 随机生成的防守指标数据
+                const defenseData = [speed, agility, height, wingspan];
+                const midDefenseValues = [3.6, 0.375, 198, 205];
+                const standardizedDefenseData = defenseData.map((d, i) => standardize(d, midDefenseValues[i]));
+                const weightsDefense = [1, 1, 1, 1];
+                const scoreDefense = standardizedDefenseData.reduce((acc, curr, index) => acc + curr * weightsDefense[index], 0) / weightsDefense.reduce((acc, curr) => acc + curr, 0);
+
+                const defenseBreakingData = [speed, agility, wingspan, endurance];
+                const midDefenseBreakingValues = [3.6, 0.375, 205, 5];
+                const standardizedDefenseBreakingData = defenseBreakingData.map((d, i) => standardize(d, midDefenseBreakingValues[i]));
+                const weightsBreakingDefense = [1, 1, 1, 1];
+                const scoreBreakingDefense = standardizedDefenseBreakingData.reduce((acc, curr, index) => acc + curr * weightsBreakingDefense[index], 0) / weightsBreakingDefense.reduce((acc, curr) => acc + curr, 0);
+
+                const X1 = scoreShooting - scoreDefense;
+                const X2 = scoreBreaking - scoreBreakingDefense;
+                if (X1 > X2) {
+                    P++;
+                } else {
+                    U++;
+                }
+            }
+            const shootingPercentage = P / (P + U);
+            const breakingPercentage = U / (P + U);
+
+            // 判断球员类型
+            let playerType;
+            if (shootingPercentage / breakingPercentage > 2) {
+                playerType = "预测是以投篮为主要得分手段的得分后卫。";
+            } else if (shootingPercentage / breakingPercentage < 0.67) {
+                playerType = "预测是以突破为主要得分手段的得分后卫。";
+            } else {
+                playerType = "预测是全能型的得分后卫。";
+            }
+
+            // 在网页上显示结果并绘制图表
+            const resultsDiv = document.getElementById('results');
+            const resultTextDiv = document.getElementById('result-text');
+            resultTextDiv.innerHTML = `<p>综合得分（标准化后）：${score.toFixed(2)}</p><p>投篮能力综合得分（标准化后）：${scoreShooting.toFixed(2)}</p><p>突破能力综合得分（标准化后）：${scoreBreaking.toFixed(2)}</p><p>投篮占比：${(shootingPercentage * 100).toFixed(2)}%</p><p>突破占比：${(breakingPercentage * 100).toFixed(2)}%</p><p>该球员${playerType}</p>`;
+
+            const canvas = resultsDiv.querySelector('canvas');
+            canvas.width = 450;
+            canvas.height = 300;
+            const ctx = canvas.getContext('2d');
+
+            // 克莱·汤普森数据（这里可以用输入的数据来替换）
+            const clayThompsonData = playerData;
+            // 中间值
+            const clayThompsonMidValues = [198, 0.3, 5, 3.6, 0.375, 5, 80, 205, 5];
+            // 指标名称
+            const indicators = ['身高', '投篮能力', '投篮稳定性', '速度', '敏捷性', '运球能力', '弹跳力', '臂展', '耐力'];
+
+            // 标准化后的克莱汤普森数据
+            const standardizedClayThompsonData = clayThompsonData.map((d, i) => standardize(d, clayThompsonMidValues[i]));
+
+            // 绘制折线图
+            ctx.beginPath();
+            ctx.moveTo(30, 270);
+            for (let i = 0; i < standardizedClayThompsonData.length; i++) {
+                ctx.lineTo(50 + i * 45, 270 - standardizedClayThompsonData[i] * 200);
+            }
+            ctx.strokeStyle = 'navy';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // 绘制中间值的水平线（标准化后为 0）
+            ctx.beginPath();
+            ctx.moveTo(30, 270);
+            ctx.lineTo(450, 270);
+            ctx.strokeStyle = 'lightgray';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // 添加数值标注
+            for (let i = 0; i < standardizedClayThompsonData.length; i++) {
+                ctx.fillText(standardizedClayThompsonData[i].toFixed(2), 50 + i * 45, 270 - standardizedClayThompsonData[i] * 200 - 5);
+            }
+        });
+    </script>
+</body>
+
+</html>
